@@ -1,0 +1,47 @@
+﻿<div class="pk default" data-dojo-attach-point="pkContainer">
+	<div data-dojo-attach-point="overlay" class="splash-overlay"></div>
+	<div data-dojo-attach-point="splashContainer" class="splash"></div>
+	<div class="tabs">
+		<div class="tab lighter darkest" data-dojo-attach-point="tabGrid"><span class="icon grid"></span></div>
+		<div class="tab darker lightest" data-dojo-attach-point="tabPoint"><span class="icon point"></span></div>
+		<div class="tab darker lightest" data-dojo-attach-point="tabLine"><span class="icon line"></span></div>
+		<div class="clear"></div>
+	</div>
+	<div class="panels">
+		<div data-dojo-attach-point="panelGrid" class="panel active lighter darkest">
+			<div class="searchXY">
+				<div class="searchCoordinate">
+					<div class="searchCoordinateLabel">X</div>
+					<div class="searchCoordinateInput"><input type="text" data-dojo-attach-point="xInput"></input></div>
+				</div>
+				<div class="searchCoordinate">
+					<div class="searchCoordinateLabel">Y</div>
+					<div class="searchCoordinateInput"><input type="text" data-dojo-attach-point="yInput"></input></div>
+				</div>
+				<div class="button darker lightest" data-dojo-attach-point="searchXYButton">
+					Search
+				</div>
+			</div>
+			<div class="searchGrid" data-dojo-attach-point="grid">
+
+			</div>
+			<div class="buttons">
+				<div class="button darker lightest" data-dojo-attach-point="deleteLabelsButton">
+					Delete labels
+				</div>
+			</div>
+		</div>
+		<div data-dojo-attach-point="panelPoint" class="panel lighter darkest">
+			<select data-dojo-attach-point="routeName1Select"></select>
+			PK:<input data-dojo-attach-point="pkInput" type="text"></input>
+			<input type="button" class="button" data-dojo-attach-point="searchPkButton" value="Search"></input>
+		</div>
+		<div data-dojo-attach-point="panelLine" class="panel lighter darkest">
+			<select data-dojo-attach-point="routeName2Select"></select>
+			PK From:<input data-dojo-attach-point="pkFrom" type="text"></input>
+			PK To:<input data-dojo-attach-point="pkTo" type="text"></input>
+			<input type="button" class="button" data-dojo-attach-point="searchPkFromToButton" value="Search"></input>
+		</div>
+	</div>
+
+</div>
