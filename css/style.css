@@ -166,13 +166,13 @@
 .pk .panelRoute .line {
 	position:relative;
 	width:100%;
-	padding: 0px 0px 0px 40px;
+	padding: 5px 0px 5px 60px;
 }
 
 .pk .panelRoute .label  {
   position: absolute;
   left: 0px;
-  top:2px;
+  top:4px;
   padding: 5px;
 }
 
@@ -191,12 +191,16 @@
 }
 
 .pk .panelRoute .buttons .buttonsContainer{
-	width: 200px;
+	width: 210px;
 	margin: auto;
 }
 
 .pk .panelRoute .buttons .buttonsContainer .button{
 	width: 100px;
+}
+
+.pk .panelRoute .buttons .buttonsContainer .button{
+	margin: 0px 5px 0px 0px;
 }
 
 /**********************/

@@ -1,3 +1,20 @@
 {
-    "LRSServer": "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer"
+    "proxy": "https://applications.bewapp.be/gettoken/proxy.ashx",
+    "prefixes": [
+        "intranet.pch.etat.lu",
+        "ws.geoportail.lu",
+        "applications.bewapp.be",
+        "ns333877.esribelux.eu:6080",
+        "services3.arcgis.com",
+        "roadsandhighwayssample.esri.com"
+    ],
+    "zoomFactor":13,
+    "lrsServer": "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/3",
+    "mapServer":{
+        "label":"NewYork",
+        "url":"http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer",
+        "routeId":3,
+        "routeFieldName":"routename",
+        "routeIdFieldName":"customroutefield"
+    }
 }

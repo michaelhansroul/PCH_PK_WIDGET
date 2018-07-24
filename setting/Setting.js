@@ -36,7 +36,7 @@ define([
   BaseWidgetSetting,
   domClass) {
     return declare([BaseWidgetSetting, _WidgetsInTemplateMixin], {
-      baseClass: 'jimu-widget-catalog-setting',
+      baseClass: 'jimu-widget-pk-setting',
 
       startup: function() {
         this.inherited(arguments);

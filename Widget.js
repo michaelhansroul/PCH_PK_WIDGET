@@ -15,7 +15,11 @@ define([
 	'./ProxyManager',
 	"esri/layers/GraphicsLayer",
 	"./src/GridTool",
-	"./src/Promise"
+	"./src/RoutePkTool",
+	"./src/RoutePkFromToTool",
+	"./src/Promise",
+	"esri/geometry/Polyline",
+	"esri/symbols/SimpleLineSymbol"
 	],
   function(
 	declare,
@@ -33,7 +37,12 @@ define([
 	Point,
 	Proxy,
 	GraphicsLayer,
-	GridTool
+	GridTool,
+	RoutePkTool,
+	RoutePkFromToTool,
+	Promise,
+	Polyline,
+	SimpleLineSymbol
 	) 
 	{
     //To create a widget, you need to derive from BaseWidget.
@@ -67,32 +76,25 @@ define([
 			this.currentPanel = this.panelGrid;
 			on(this.tabGrid,"click",lang.hitch(this,function(event){
 				this.switchPanel(this.tabGrid,this.panelGrid);
+				this.activateDeactivate(this.gridTool);
 			}));
 			on(this.tabPoint,"click",lang.hitch(this,function(event){
 				this.switchPanel(this.tabPoint,this.panelPoint);
+				this.activateDeactivate(this.routePkTool);
 			}));
 			on(this.tabLine,"click",lang.hitch(this,function(event){
 				this.switchPanel(this.tabLine,this.panelLine);
+				this.activateDeactivate(this.routePkFromToTool);
 			}));
 			
 			//Tools
 			this.gridTool = new GridTool(this);
+			this.routePkTool = new RoutePkTool(this);
+			this.routePkFromToTool = new RoutePkFromToTool(this);
 			this.activateDeactivate(this.gridTool);
 
-			//Seach PK
-			on(this.searchPkButton,"click",lang.hitch(this,function(){
-				this.searchPkWithRouteNameAndPk(this.routeName1Select.value,this.pkInput.value);
-			}));
-
-			//Seach PK From To
-			on(this.searchPkFromToButton,"click",lang.hitch(this,function(){
-				this.searchPkWithRouteNameAndPkFromAndPkTo(this.routeName2Select.value,this.pkFrom.value,this.pkTo.value);
-			}));
-
-			//
+			//Initialize Route
 			this.initializeRouteName();
-
-			this.graphics = new GraphicsLayer();
 		},
 
 		switchPanel:function(tab,panel){
@@ -119,24 +121,43 @@ define([
 		{
 			this.splash.wait();
 			var query = new Query();
-			var queryTask = new QueryTask("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/3");
+			var queryTask = new QueryTask(this.config.mapServer.url+"/"+this.config.mapServer.routeId);
 			query.where = "1 = 1";
 			//query.outSpatialReference = {wkid:102100}; 
 			query.returnGeometry = false;
-			query.outFields = ["OBJECTID","customroutefield","routename","milelength","milepointname"];
-			queryTask.execute(query, lang.hitch(this,function(response){
-				for (var i = 0; i<response.features.length; i++){
-					var opt = document.createElement('option');
-					opt.value = response.features[i].attributes["customroutefield"];
-					opt.innerHTML = response.features[i].attributes["routename"];
-					this.routeName1Select.appendChild(opt);
-					var opt2 = document.createElement('option');
-					opt2.value = response.features[i].attributes["customroutefield"];
-					opt2.innerHTML = response.features[i].attributes["routename"];
-					this.routeName2Select.appendChild(opt2);
-				}
-				this.splash.hide();
-			}));
+			query.outFields = [this.config.mapServer.routeFieldName,this.config.mapServer.routeIdFieldName];
+			queryTask.execute(
+				query, 
+				lang.hitch(this,function(response){
+					if(!response || !response.features || response.features.length == 0)
+					{
+						this.error("Routes not found !");
+						return;
+					}
+					debugger;
+					response.features.sort(lang.hitch(this,function(a, b){
+						if(a.attributes[this.config.mapServer.routeFieldName] < b.attributes[this.config.mapServer.routeFieldName]) return -1;
+						if(a.attributes[this.config.mapServer.routeFieldName] > b.attributes[this.config.mapServer.routeFieldName]) return 1;
+						return 0;
+					}));
+
+					for (var i = 0; i<response.features.length; i++){
+						var opt = document.createElement('option');
+						opt.value = response.features[i].attributes[this.config.mapServer.routeIdFieldName];
+						opt.innerHTML = response.features[i].attributes[this.config.mapServer.routeFieldName];
+						this.routeName1Select.appendChild(opt);
+						var opt2 = document.createElement('option');
+						opt2.value = response.features[i].attributes[this.config.mapServer.routeIdFieldName];
+						opt2.innerHTML = response.features[i].attributes[this.config.mapServer.routeFieldName];
+						this.routeName2Select.appendChild(opt2);
+					}
+					this.splash.hide();
+					}
+				),
+				lang.hitch(this,function(error){
+					this.error(error);
+				})
+			);
 		},
 
 		activateDeactivate:function(tool)
@@ -169,7 +190,7 @@ define([
 
 			return new Promise(function(resolve, reject) {
 				esriRequest({
-					url: "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/3/geometryToMeasure",
+					url: self.config.lrsServer+"/geometryToMeasure",
 					content: params
 					},{usePost:true}).then(
 						lang.hitch(self,function(response){
@@ -182,14 +203,14 @@ define([
 									for(var g=0;g<response.locations[i].results.length;g++){
 										if(response.locations[i].results[g].geometryType!='esriGeometryPoint')continue;
 										var markerSymbol = new SimpleMarkerSymbol({
-											"color": [255,255,255,64],
-											"size": 12,
+											"color": [255,0,0,255],
+											"size": 8,
 											"angle": 0,
 											"xoffset": 0,
 											"yoffset": 0,
 											"type": "esriSMS",
-											"style": "esriSMSCross",
-											"outline": {"color":[0,0,0,255],"width":1,"type":"esriSLS","style":"esriSLSSolid"}
+											"style": "esriSMSCircle",
+											"outline": {"color":[255,0,0,255],"width":1,"type":"esriSLS","style":"esriSLSSolid"}
 										});
 										response.locations[i].results[g].geometry.spatialReference = this.map.spatialReference;
 										var attributes = {
@@ -223,35 +244,40 @@ define([
 				f:'json'
 			};
 			var self = this;
-			esriRequest({
-				url: "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/3/measureToGeometry",
-				content: params
-				},{usePost:true}).then(
-					lang.hitch(self,function(response){
-						if (response && response.locations && response.locations.length > 0) {
-							for(var i=0;i<response.locations.length;i++){
-								var loc = response.locations[i];
-								if(loc.status == "esriLocatingOK")
-								{
-									var markerSymbol = new SimpleMarkerSymbol({
-										"color": [255,255,255,64],
-										"size": 12,
-										"angle": 0,
-										"xoffset": 0,
-										"yoffset": 0,
-										"type": "esriSMS",
-										"style": "esriSMSCross",
-										"outline": {"color":[0,0,0,255],"width":1,"type":"esriSLS","style":"esriSLSSolid"}
-									  });
-									  response.locations[i].geometry.spatialReference = this.map.spatialReference;
-									  var graphic = new Graphic(new Point(response.locations[i].geometry),markerSymbol);
-									this.graphics.add(graphic);
+
+			return new Promise(function(resolve, reject) {
+				esriRequest({
+					url: self.config.lrsServer+"/measureToGeometry",
+					content: params
+					},{usePost:true}).then(
+						lang.hitch(self,function(response){
+							var graphics = [];
+							if (response && response.locations && response.locations.length > 0) {
+								for(var i=0;i<response.locations.length;i++){
+									var loc = response.locations[i];
+									if(loc.status == "esriLocatingOK")
+									{
+										var markerSymbol = new SimpleMarkerSymbol({
+											"color": [255,0,0,255],
+											"size": 8,
+											"angle": 0,
+											"xoffset": 0,
+											"yoffset": 0,
+											"type": "esriSMS",
+											"style": "esriSMSCircle",
+											"outline": {"color":[255,0,0,255],"width":1,"type":"esriSLS","style":"esriSLSSolid"}
+										});
+										response.locations[i].geometry.spatialReference = this.map.spatialReference;
+										var graphic = new Graphic(new Point(response.locations[i].geometry),markerSymbol);
+										graphics.push(graphic);
+									}
 								}
 							}
-						}
-					}),
-					lang.hitch(this,function(error){this.error(error);})
-				);
+							resolve(graphics);
+						}),
+						lang.hitch(this,function(error){reject(error);})
+					);
+			});
 		},
 
 		searchPkWithRouteNameAndPkFromAndPkTo:function(routeId,pkFrom,pkTo)
@@ -268,35 +294,35 @@ define([
 				f:'json'
 			};
 			var self = this;
-			esriRequest({
-				url: "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/3/measureToGeometry",
-				content: params
-				},{usePost:true}).then(
-					lang.hitch(self,function(response){
-						if (response && response.locations && response.locations.length > 0) {
-							for(var i=0;i<response.locations.length;i++){
-								var loc = response.locations[i];
-								if(loc.status == "esriLocatingOK")
-								{
-									var markerSymbol = new SimpleMarkerSymbol({
-										"color": [255,255,255,64],
-										"size": 12,
-										"angle": 0,
-										"xoffset": 0,
-										"yoffset": 0,
-										"type": "esriSMS",
-										"style": "esriSMSCross",
-										"outline": {"color":[0,0,0,255],"width":1,"type":"esriSLS","style":"esriSLSSolid"}
-									  });
-									  response.locations[i].geometry.spatialReference = self.map.spatialReference;
-									  var graphic = new Graphic(new Point(response.locations[i].geometry),markerSymbol);
-									this.graphics.add(graphic);
+			return new Promise(function(resolve, reject) {
+				esriRequest({
+					url: self.config.lrsServer+"/measureToGeometry",
+					content: params
+					},{usePost:true}).then(
+						lang.hitch(self,function(response){
+							var graphics = [];
+							if (response && response.locations && response.locations.length > 0) {
+								for(var i=0;i<response.locations.length;i++){
+									var loc = response.locations[i];
+									if(loc.status == "esriLocatingOK")
+									{
+										var lineSymbol = new SimpleLineSymbol({
+											"type": "esriSLS",
+											"style": "esriSLSDot",
+											"color": [255,0,0,255],
+											"width": 6
+											});
+										response.locations[i].geometry.spatialReference = self.map.spatialReference;
+										var graphic = new Graphic(new Polyline(response.locations[i].geometry),lineSymbol);
+										graphics.push(graphic);
+									}
 								}
 							}
-						}
-					}),
-					lang.hitch(this,function(error){this.error(error);})
-				);
+							resolve(graphics);
+						}),
+						lang.hitch(this,function(error){reject(error);})
+					);
+			});
 		},
 		
 		error:function(error)
@@ -333,10 +359,10 @@ define([
 		onOpen: function(){
 			///ADD MAPSERVICE
 			if(this.layer)return;
-			this.layer = new ArcGISDynamicMapServiceLayer(this.config.MapServer,{"opacity": 1});
-			this.layer.label = "NewYork";
+			this.layer = new ArcGISDynamicMapServiceLayer(this.config.mapServer.url,{"opacity": 1});
+			this.layer.label = this.config.mapServer.label;
 			this.map.addLayer(this.layer);	
-			this.map.addLayer(this.graphics);
+			//this.map.addLayer(this.graphics);
 		},
 	   
 		onClose: function(){
