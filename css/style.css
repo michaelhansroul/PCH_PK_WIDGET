@@ -101,7 +101,7 @@
 }
 
 /**********************/
-/*       SEARCHXY         */
+/*       SEARCHXY     */
 /**********************/
 
 .pk .searchXY{
@@ -158,6 +158,45 @@
   padding: 5px 0px 5px 0px;
   margin: auto;
   text-align: center;
+}
+
+/**********************/
+/*     SEARCHGRID     */
+/**********************/
+.pk .panelRoute .line {
+	position:relative;
+	width:100%;
+	padding: 0px 0px 0px 40px;
+}
+
+.pk .panelRoute .label  {
+  position: absolute;
+  left: 0px;
+  top:2px;
+  padding: 5px;
+}
+
+.pk .panelRoute input {
+  width: 100%;
+  padding: 5px;
+}
+
+.pk .panelRoute select {
+  width: 100%;
+  padding: 5px;
+}
+
+.pk .panelRoute .buttons{
+	width: 100%;
+}
+
+.pk .panelRoute .buttons .buttonsContainer{
+	width: 200px;
+	margin: auto;
+}
+
+.pk .panelRoute .buttons .buttonsContainer .button{
+	width: 100px;
 }
 
 /**********************/

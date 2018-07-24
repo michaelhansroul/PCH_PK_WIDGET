@@ -31,16 +31,44 @@
 				</div>
 			</div>
 		</div>
-		<div data-dojo-attach-point="panelPoint" class="panel lighter darkest">
-			<select data-dojo-attach-point="routeName1Select"></select>
-			PK:<input data-dojo-attach-point="pkInput" type="text"></input>
-			<input type="button" class="button" data-dojo-attach-point="searchPkButton" value="Search"></input>
+		<div data-dojo-attach-point="panelPoint" class="panel lighter darkest panelRoute">
+			<div class="line">
+				<div class="label">Route</div>
+				<select data-dojo-attach-point="routeName1Select"></select>
+			</div>
+			<div class="line">
+				<div class="label">PK</div>
+				<input data-dojo-attach-point="pkInput" type="text"></input>
+			</div>
+			<div class="buttons">
+				<div class="buttonsContainer">
+					<div class="button darker lightest" data-dojo-attach-point="searchPkButton" value="Search"></div>
+					<div class="button darker lightest" data-dojo-attach-point="zoomPkButton" value="Zoom"></div>
+				</div>
+			</div>
+			<div class="buttons">
+				<div class="buttonsContainer">
+					<div class="button darker lightest" data-dojo-attach-point="labelPkButton" value="Label"></div>
+					<div class="button darker lightest" data-dojo-attach-point="clearPkButton" value="Clear"></div>
+				</div>
+			</div>
 		</div>
-		<div data-dojo-attach-point="panelLine" class="panel lighter darkest">
-			<select data-dojo-attach-point="routeName2Select"></select>
-			PK From:<input data-dojo-attach-point="pkFrom" type="text"></input>
-			PK To:<input data-dojo-attach-point="pkTo" type="text"></input>
-			<input type="button" class="button" data-dojo-attach-point="searchPkFromToButton" value="Search"></input>
+		<div data-dojo-attach-point="panelLine" class="panel lighter darkest panelRoute">
+			<div class="line">
+				<div class="label">Route</div>
+				<select data-dojo-attach-point="routeName2Select"></select>
+			</div>
+			<div class="line">
+				<div class="label">PK From</div>
+				<input data-dojo-attach-point="pkFrom" type="text"></input>
+			</div>
+			<div class="line">
+				<div class="label">PK To</div>
+				<input data-dojo-attach-point="pkTo" type="text"></input>
+			</div>
+			<div class="buttons">
+				<div class="button darker lightest" data-dojo-attach-point="searchPkFromToButton" value="Search"></div>
+			</div>
 		</div>
 	</div>
 
