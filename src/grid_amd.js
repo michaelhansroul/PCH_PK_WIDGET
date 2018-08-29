@@ -1,10 +1,11 @@
 define(
-	['dojo/on','dojo/Evented',"dojo/dom-class"],
-	function(on,Evented,domClass)
+	['dojo/on','dojo/Evented',"dojo/dom-class","dojo/_base/array"],
+	function(on,Evented,domClass,array)
 	{
 		return function(div, properties)
 		{
 			var self = this;
+			this.evented = new Evented();
 			this.dom_table = null;
 			this.dom_header = null;
 			this.dom_body = null;
@@ -14,6 +15,16 @@ define(
 		
 			this.data = null;
 			this.columns = null;
+
+			this.emit = function(eventName,params)
+			{
+				this.evented.emit(eventName,params);
+			}
+
+			this.on = function(eventName,callback)
+			{
+				this.evented.on(eventName,callback);
+			}
 			
 			// =============================
 			// INITIALIZE
@@ -277,6 +288,8 @@ define(
 					}	
 					else if( this.columns[j].type == 'esriFieldTypeDate' )
 						value = new Date(parseInt(value)).toNormalString();
+					else if(this.columns[j].round)
+						value = Math.round(value*1000)/1000;
 					td.innerHTML = value;
 				}
 			}
@@ -669,7 +682,7 @@ define(
 			{
 				try
 				{
-					if( !this.isSelectable || in_array(this.selection, row) )
+					if( !this.isSelectable || array.indexOf(this.selection, row)!=-1 )
 						return;
 					this.selection.push(row);
 					
@@ -682,7 +695,7 @@ define(
 							{
 								if(this.dom_body.childNodes.length>k)
 								{
-									addClassName(this.dom_body.childNodes[k], 'selected');
+									domClass.add(this.dom_body.childNodes[k], 'selected');
 									this.dom_body.childNodes[k].firstChild.firstChild.checked = true;
 								}
 							}
@@ -696,14 +709,14 @@ define(
 				}
 				catch(e)
 				{
-					console.log("GRID SELECT", esribelux.status.WARNING);
+					console.log("GRID SELECT", "WARNING");
 					console.error(e); 
 				}
 			}
 			
 			this.deselect = function(row)
 			{
-				if( !this.isSelectable || !in_array(this.selection, row) )
+				if( !this.isSelectable || array.indexOf(this.selection, row)==-1 )
 					return;
 					
 				for(var i = 0; i < this.selection.length; i++)
@@ -739,7 +752,7 @@ define(
 			
 			this.toggle = function(row)
 			{
-				if( in_array(this.selection, row) )
+				if( array.indexOf(this.selection, row)!=-1)
 					this.deselect(row);
 				else
 					this.select(row);
@@ -834,7 +847,7 @@ define(
 			this.isRemovable = false;
 			this.remove = function(row)
 			{
-				if( !this.isRemovable || !in_array(this.data, row) )
+				if( !this.isRemovable || array.indexOf(this.data, row)==-1  )
 					return;
 		
 				// deselect first
@@ -901,9 +914,9 @@ define(
 			this.stopEvents = false;
 			this.onEdit = function(row, field, oldValue, newValue){}
 			this.onEditRow = function(row, tr){}
-			this.onDeselect = function(row){}
-			this.onSelect = function(row){}
-			this.onZoom = function(row){}
+			this.onDeselect = function(row){self.emit("onDeselect",row);}
+			this.onSelect = function(row){self.emit("onSelect",row);}
+			this.onZoom = function(row){self.emit("onZoom",row);}
 			this.onAdd = function(row){}
 			this.onRemove = function(row){}
 			this.onPaging = function(page){}

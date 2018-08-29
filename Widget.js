@@ -19,7 +19,9 @@ define([
 	"./src/RoutePkFromToTool",
 	"./src/Promise",
 	"esri/geometry/Polyline",
-	"esri/symbols/SimpleLineSymbol"
+	"esri/symbols/SimpleLineSymbol",
+	"esri/symbols/TextSymbol",
+	"esri/Color"
 	],
   function(
 	declare,
@@ -42,7 +44,9 @@ define([
 	RoutePkFromToTool,
 	Promise,
 	Polyline,
-	SimpleLineSymbol
+	SimpleLineSymbol,
+	TextSymbol,
+	Color
 	) 
 	{
     //To create a widget, you need to derive from BaseWidget.
@@ -95,6 +99,9 @@ define([
 
 			//Initialize Route
 			this.initializeRouteName();
+
+			//Graphics
+			this.overGraphics = new GraphicsLayer();
 		},
 
 		switchPanel:function(tab,panel){
@@ -134,7 +141,7 @@ define([
 						this.error("Routes not found !");
 						return;
 					}
-					debugger;
+					
 					response.features.sort(lang.hitch(this,function(a, b){
 						if(a.attributes[this.config.mapServer.routeFieldName] < b.attributes[this.config.mapServer.routeFieldName]) return -1;
 						if(a.attributes[this.config.mapServer.routeFieldName] > b.attributes[this.config.mapServer.routeFieldName]) return 1;
@@ -173,7 +180,7 @@ define([
 				this.currentTool.activate();
 		},
 
-		searchPkWithPosition:function(mapPoint)
+		searchPkWithPosition:function(mapPoint,tolerance)
 		{
 			var location = { 
 				"geometry" : { "x" : mapPoint.x, "y" : mapPoint.y }
@@ -183,7 +190,7 @@ define([
 				locations: JSON.stringify([location]),
 				inSR:JSON.stringify(this.map.spatialReference.toJson()),
 				outSR: JSON.stringify(this.map.spatialReference.toJson()),
-				tolerance:10,
+				tolerance:tolerance ? tolerance:10,
 				f:'json'
 			};
 			var self = this;
@@ -357,16 +364,80 @@ define([
 	   },
 	
 		onOpen: function(){
+			
 			///ADD MAPSERVICE
 			if(this.layer)return;
 			this.layer = new ArcGISDynamicMapServiceLayer(this.config.mapServer.url,{"opacity": 1});
 			this.layer.label = this.config.mapServer.label;
 			this.map.addLayer(this.layer);	
-			//this.map.addLayer(this.graphics);
+
+			/// PK OVER MAP
+			this.overHandler = on(this.map,"mouse-move",lang.hitch(this,function(event){
+				this.searchOverMapPoint = event.mapPoint;
+				if(this.isOverSearch)return;
+				this.isOverSearch = true;
+				this.searchOver(this.searchOverMapPoint);
+			}));
+
+			this.map.addLayer(this.overGraphics);	
+		},
+
+		searchOver: function(overMapPoint){
+			this.searchPkWithPosition(overMapPoint,2).then(
+				lang.hitch(this,function(graphics){
+					if(graphics && graphics.length>0){
+						this.overGraphics.clear();
+						
+						graphics[0].symbol.setColor(new Color([255,185,15,255]));
+						var graphicPoint = new Graphic(new Point(graphics[0].geometry),graphics[0].symbol);
+									
+						graphics[0].setSymbol(new TextSymbol(
+							{
+							"type": "esriTS",
+							"color": [255,255,255,255],
+							"backgroundColor": [0,0,0,255],
+							"borderLineSize": 2,
+							"borderLineColor": [0,0,0,255],
+							"haloSize": 2,
+							"haloColor": [0,0,0,255],
+							"verticalAlignment": "bottom",
+							"horizontalAlignment": "left",
+							"rightToLeft": false,
+							"angle": 0,
+							"xoffset": 0,
+							"yoffset": 0,
+							"kerning": true,
+							"font": {
+							 "family": "Arial",
+							 "size": 10,
+							 "style": "normal",
+							 "weight": "bold",
+							 "decoration": "none"
+							},
+							"text":graphics[0].attributes["routeId"]+": "+graphics[0].attributes["measure"]
+					   }
+					   ));
+					   this.overGraphics.add(graphicPoint);
+					   this.overGraphics.add(graphics[0]);
+					}
+
+					if(this.overMapPoint===this.searchOverMapPoint){
+						this.isOverSearch = false;
+					}else{
+						this.searchOver(this.searchOverMapPoint);
+					}
+				}),
+				lang.hitch(this,function(error){this.isOverSearch = false;this.error(error);})
+			);
 		},
 	   
 		onClose: function(){
-			///REMOVE MAPSERVICE
+			///REMOVE OVER MAP
+			if(this.overHandler)
+				this.overHandler.remove();
+
+			this.overGraphics.clear();
+			this.map.removeLayer(this.overGraphics);
 		},
 		
 		toggle: function(elem){
