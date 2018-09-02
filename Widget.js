@@ -100,8 +100,7 @@ define([
 			//Initialize Route
 			this.initializeRouteName();
 
-			//Graphics
-			this.overGraphics = new GraphicsLayer();
+			
 		},
 
 		switchPanel:function(tab,panel){
@@ -180,8 +179,9 @@ define([
 				this.currentTool.activate();
 		},
 
-		searchPkWithPosition:function(mapPoint,tolerance)
+		searchPkWithPosition:function(mapPoint)
 		{
+			var searchRadius = (this.map.extent.getWidth()/this.map.width)*15;
 			var location = { 
 				"geometry" : { "x" : mapPoint.x, "y" : mapPoint.y }
             };
@@ -190,7 +190,7 @@ define([
 				locations: JSON.stringify([location]),
 				inSR:JSON.stringify(this.map.spatialReference.toJson()),
 				outSR: JSON.stringify(this.map.spatialReference.toJson()),
-				tolerance:tolerance ? tolerance:10,
+				tolerance:searchRadius,
 				f:'json'
 			};
 			var self = this;
@@ -366,79 +366,32 @@ define([
 		onOpen: function(){
 			
 			///ADD MAPSERVICE
-			if(this.layer)return;
+			if(!this.layer){
 			this.layer = new ArcGISDynamicMapServiceLayer(this.config.mapServer.url,{"opacity": 1});
 			this.layer.label = this.config.mapServer.label;
-			this.map.addLayer(this.layer);	
+			this.map.addLayer(this.layer);
+			}	
 
-			/// PK OVER MAP
-			this.overHandler = on(this.map,"mouse-move",lang.hitch(this,function(event){
-				this.searchOverMapPoint = event.mapPoint;
-				if(this.isOverSearch)return;
-				this.isOverSearch = true;
-				this.searchOver(this.searchOverMapPoint);
-			}));
-
-			this.map.addLayer(this.overGraphics);	
-		},
-
-		searchOver: function(overMapPoint){
-			this.searchPkWithPosition(overMapPoint,2).then(
-				lang.hitch(this,function(graphics){
-					if(graphics && graphics.length>0){
-						this.overGraphics.clear();
-						
-						graphics[0].symbol.setColor(new Color([255,185,15,255]));
-						var graphicPoint = new Graphic(new Point(graphics[0].geometry),graphics[0].symbol);
-									
-						graphics[0].setSymbol(new TextSymbol(
-							{
-							"type": "esriTS",
-							"color": [255,255,255,255],
-							"backgroundColor": [0,0,0,255],
-							"borderLineSize": 2,
-							"borderLineColor": [0,0,0,255],
-							"haloSize": 2,
-							"haloColor": [0,0,0,255],
-							"verticalAlignment": "bottom",
-							"horizontalAlignment": "left",
-							"rightToLeft": false,
-							"angle": 0,
-							"xoffset": 0,
-							"yoffset": 0,
-							"kerning": true,
-							"font": {
-							 "family": "Arial",
-							 "size": 10,
-							 "style": "normal",
-							 "weight": "bold",
-							 "decoration": "none"
-							},
-							"text":graphics[0].attributes["routeId"]+": "+graphics[0].attributes["measure"]
-					   }
-					   ));
-					   this.overGraphics.add(graphicPoint);
-					   this.overGraphics.add(graphics[0]);
-					}
-
-					if(this.overMapPoint===this.searchOverMapPoint){
-						this.isOverSearch = false;
-					}else{
-						this.searchOver(this.searchOverMapPoint);
-					}
-				}),
-				lang.hitch(this,function(error){this.isOverSearch = false;this.error(error);})
-			);
+			if(this.currentTool)
+				this.currentTool.activate();
 		},
 	   
 		onClose: function(){
-			///REMOVE OVER MAP
-			if(this.overHandler)
-				this.overHandler.remove();
-
-			this.overGraphics.clear();
-			this.map.removeLayer(this.overGraphics);
+			if(this.currentTool)
+				this.currentTool.deactivate();
 		},
+
+		/*onMinimize: function(){
+			console.log("Minimize");
+			if(this.currentTool)
+				this.currentTool.deactivate();
+		},
+
+		onMaximize: function(){
+			console.log("Maximize");
+			if(this.currentTool)
+				this.currentTool.activate();
+		},*/
 		
 		toggle: function(elem){
 			if(elem.style.display == "none")
@@ -453,15 +406,7 @@ define([
 		
 		hide: function(elem){
 			elem.style.display = "none";
-		}
-	  
-      // onMinimize: function(){
-      //   console.log('onMinimize');
-      // },
-
-      // onMaximize: function(){
-      //   console.log('onMaximize');
-      // },
+		},
 
       // onSignIn: function(credential){
       //   /* jshint unused:false*/
@@ -476,9 +421,9 @@ define([
       //   console.log('onPositionChange');
       // },
 
-      // resize: function(){
-      //   console.log('resize');
-      // }
+       resize: function(){
+         //console.log('resize');
+       }
 
 
     });

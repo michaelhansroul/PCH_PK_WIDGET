@@ -22,6 +22,7 @@ define([
 {
     return declare([Evented], {
 		constructor: function(widget){
+            this.isActivate=false;
             this.widget = widget;
             this.map = widget.map;
 
@@ -57,11 +58,15 @@ define([
 
         activate: function()
         {
+            if(this.isActivate)return;
+            this.isActivate=true;
             this.map.addLayer(this.graphics);
         },
 
         deactivate: function()
         {
+            if(!this.isActivate)return;
+            this.isActivate=false;
             this.map.removeLayer(this.graphics);
         }
     });

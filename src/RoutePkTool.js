@@ -26,25 +26,15 @@ define([
             this.widget = widget;
             this.map = widget.map;
             this.graphics = new GraphicsLayer();
+            this.isActivate=false;
 
             //Search PK
 			on(this.widget.searchPkButton,"click",lang.hitch(this,function(){
-                this.widget.splash.wait();
-				this.widget.searchPkWithRouteNameAndPk(this.widget.routeName1Select.value,this.widget.pkInput.value).then(
-                    lang.hitch(this,function(graphics){
-                        if(!graphics || graphics.length==0){
-                            this.widget.info("No feature found !");
-                            return;
-                        }
-                        this.current = graphics[0];
-                        this.widget.splash.success();
-                    }),
-                    lang.hitch(this,function(error){this.widget.error(error);})
-                );
+                this.search(false);
             }));
             
             on(this.widget.zoomPkButton,"click",lang.hitch(this,function(){
-                this.zoom();
+                this.search(true);
             }));
 
             on(this.widget.labelPkButton,"click",lang.hitch(this,function(){
@@ -54,6 +44,33 @@ define([
             on(this.widget.clearPkButton,"click",lang.hitch(this,function(){
                 this.clear();
             }));
+        },
+
+        search:function(zoom){
+            this.widget.splash.wait();
+				this.widget.searchPkWithRouteNameAndPk(this.widget.routeName1Select.value,this.widget.pkInput.value).then(
+                    lang.hitch(this,function(graphics){
+                        if(!graphics || graphics.length==0){
+                            this.widget.info("No feature found !");
+                            return;
+                        }
+                        this.current = graphics[0];
+                        var title = this.widget.routeName1Select.value+" "+this.widget.pkInput.value+" "+(Math.round(this.current.geometry.x*1000)/1000) + ", " + (Math.round(this.current.geometry.y*1000)/1000);
+                        
+                        this.map.infoWindow.setTitle(title);
+                        /*this.map.infoWindow.setContent(
+                        "PK : " + this.widget.pkInput.value + 
+                        "<br>x/y : " + this.current.geometry.x + ", " + this.current.geometry.y
+                        );*/
+                        this.map.infoWindow.show(this.current.geometry);
+
+                        this.map.centerAt(this.current.geometry);
+                        if(zoom)
+                            this.zoom();
+                        this.widget.splash.success();
+                    }),
+                    lang.hitch(this,function(error){this.widget.error(error);})
+                );
         },
 
         addLabel:function(){
@@ -76,11 +93,15 @@ define([
 
         activate: function()
         {
+            if(this.isActivate)return;
+            this.isActivate=true;
             this.map.addLayer(this.graphics);
         },
 
         deactivate: function()
         {
+            if(!this.isActivate)return;
+            this.isActivate=false;
             this.map.removeLayer(this.graphics);
         }
     });
