@@ -21,7 +21,9 @@ define([
 	"esri/geometry/Polyline",
 	"esri/symbols/SimpleLineSymbol",
 	"esri/symbols/TextSymbol",
-	"esri/Color"
+	"esri/Color",
+	"dijit/form/TimeTextBox",
+	"dijit/form/DateTextBox"
 	],
   function(
 	declare,
@@ -46,7 +48,8 @@ define([
 	Polyline,
 	SimpleLineSymbol,
 	TextSymbol,
-	Color
+	Color,
+	TimeTextBox,DateTextBox
 	) 
 	{
     //To create a widget, you need to derive from BaseWidget.
@@ -100,7 +103,36 @@ define([
 			//Initialize Route
 			this.initializeRouteName();
 
+			//DateTime
+			this.time = new TimeTextBox({name: "startTime", value: new Date(),
+				constraints: {
+					timePattern: 'HH:mm:ss',
+					clickableIncrement: 'T00:15:00',
+					visibleIncrement: 'T00:15:00',
+					visibleRange: 'T01:00:00'
+				}
+			}, this.startTime);
 			
+			this.date = new DateTextBox({
+				value: new Date(),
+			}, this.startDate);
+			
+			this.time.startup();
+			this.date.startup();
+		},
+
+		getDateTime:function(){
+			if(!this.dateTimeCheckbox.checked)return null;
+
+			var time = this.time.get("value");
+			var hour = time.getHours();
+			var minute = time.getMinutes();
+		  
+			var date = this.date.get("value");
+			date.setHours(hour, minute, 0, 0);  
+
+			var milliseconds = date.getTime();
+			return milliseconds;
 		},
 
 		switchPanel:function(tab,panel){
@@ -190,9 +222,14 @@ define([
 				locations: JSON.stringify([location]),
 				inSR:JSON.stringify(this.map.spatialReference.toJson()),
 				outSR: JSON.stringify(this.map.spatialReference.toJson()),
-				tolerance:searchRadius,
+				tolerance:searchRadius,				
 				f:'json'
 			};
+			
+			var temporalViewDate = this.getDateTime();
+			if(temporalViewDate)
+				params["temporalViewDate"]=temporalViewDate;
+
 			var self = this;
 
 			return new Promise(function(resolve, reject) {
@@ -250,6 +287,11 @@ define([
 				outSR: JSON.stringify(this.map.spatialReference.toJson()),
 				f:'json'
 			};
+
+			var temporalViewDate = this.getDateTime();
+			if(temporalViewDate)
+				params["temporalViewDate"]=temporalViewDate;
+
 			var self = this;
 
 			return new Promise(function(resolve, reject) {
@@ -300,6 +342,11 @@ define([
 				outSR: JSON.stringify(this.map.spatialReference.toJson()),
 				f:'json'
 			};
+
+			var temporalViewDate = this.getDateTime();
+			if(temporalViewDate)
+				params["temporalViewDate"]=temporalViewDate;
+
 			var self = this;
 			return new Promise(function(resolve, reject) {
 				esriRequest({
