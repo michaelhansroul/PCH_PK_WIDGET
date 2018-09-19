@@ -23,7 +23,8 @@ define([
 	"esri/symbols/TextSymbol",
 	"esri/Color",
 	"dijit/form/TimeTextBox",
-	"dijit/form/DateTextBox"
+	"dijit/form/DateTextBox",
+	"dojo/date/locale"
 	],
   function(
 	declare,
@@ -49,7 +50,7 @@ define([
 	SimpleLineSymbol,
 	TextSymbol,
 	Color,
-	TimeTextBox,DateTextBox
+	TimeTextBox,DateTextBox,locale
 	) 
 	{
     //To create a widget, you need to derive from BaseWidget.
@@ -68,7 +69,8 @@ define([
       //   this.inherited(arguments);
       //   console.log('postCreate');
       // },
-	  
+	  	format:function(date, fmt){ return locale.format( date, {selector:"date", datePattern:fmt } ); },
+
 		startup: function() {
 			this.inherited(arguments);
 
@@ -119,20 +121,49 @@ define([
 			
 			this.time.startup();
 			this.date.startup();
+
+
+			on(this.date,"change",lang.hitch(this,function(){
+				if(this.dateTimeCheckbox.checked){
+					this.dateChange();
+					this.initializeRouteName();;
+				}
+			}));
+
+			on(this.dateTimeCheckbox,"click",lang.hitch(this,function(){
+				if(this.dateTimeCheckbox.checked){
+					this.dateChange();
+				}
+				else{
+					this.layer.setDefaultLayerDefinitions();
+				}
+				this.initializeRouteName();
+			}));
+
 		},
 
-		getDateTime:function(){
-			if(!this.dateTimeCheckbox.checked)return null;
+		dateChange:function(){
+			var date = this.getDate();
+			var dateString = this.format(date,this.config.mapServer.formatDate);
+			var layerDefinitions = [];
+			for(var i=0;i<this.config.mapServer.routeIdsDefinitionQuery.length;i++)
+				layerDefinitions[this.config.mapServer.routeIdsDefinitionQuery[i]] = this.config.mapServer.dateDefinitionQuery.replace(/#DATE#/g, dateString);
+			this.layer.setLayerDefinitions(layerDefinitions);
+		},
 
+		getDate:function(){
 			var time = this.time.get("value");
 			var hour = time.getHours();
 			var minute = time.getMinutes();
 		  
 			var date = this.date.get("value");
 			date.setHours(hour, minute, 0, 0);  
+			return date;
+		},
 
-			var milliseconds = date.getTime();
-			return milliseconds;
+		getDateTime:function(){
+			if(!this.dateTimeCheckbox.checked)return null;
+			return this.getDate().getTime();;
 		},
 
 		switchPanel:function(tab,panel){
@@ -160,7 +191,15 @@ define([
 			this.splash.wait();
 			var query = new Query();
 			var queryTask = new QueryTask(this.config.mapServer.url+"/"+this.config.mapServer.routeId);
-			query.where = "1 = 1";
+
+			if(this.dateTimeCheckbox.checked){
+				var date = this.getDate();
+				var dateString = this.format(date,this.config.mapServer.formatDate);
+				query.where = this.config.mapServer.dateDefinitionQuery.replace(/#DATE#/g, dateString);
+			}
+			else
+				query.where = "1 = 1";
+
 			//query.outSpatialReference = {wkid:102100}; 
 			query.returnGeometry = false;
 			query.outFields = [this.config.mapServer.routeFieldName,this.config.mapServer.routeIdFieldName];
@@ -179,6 +218,8 @@ define([
 						return 0;
 					}));
 
+					this.routeName1Select.options.length = 0;
+					this.routeName2Select.options.length = 0;
 					for (var i = 0; i<response.features.length; i++){
 						var opt = document.createElement('option');
 						opt.value = response.features[i].attributes[this.config.mapServer.routeIdFieldName];
@@ -411,12 +452,12 @@ define([
 	   },
 	
 		onOpen: function(){
-			
+			this.map.setInfoWindowOnClick(false);
 			///ADD MAPSERVICE
 			if(!this.layer){
-			this.layer = new ArcGISDynamicMapServiceLayer(this.config.mapServer.url,{"opacity": 1});
-			this.layer.label = this.config.mapServer.label;
-			this.map.addLayer(this.layer);
+				this.layer = new ArcGISDynamicMapServiceLayer(this.config.mapServer.url,{"opacity": 1});
+				this.layer.label = this.config.mapServer.label;
+				this.map.addLayer(this.layer);
 			}	
 
 			if(this.currentTool)
@@ -426,6 +467,7 @@ define([
 		onClose: function(){
 			if(this.currentTool)
 				this.currentTool.deactivate();
+			this.map.setInfoWindowOnClick(true);
 		},
 
 		/*onMinimize: function(){

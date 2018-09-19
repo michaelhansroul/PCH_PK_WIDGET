@@ -16,5 +16,28 @@
         </textarea>
     </div>
     <div data-dojo-attach-point="helpContainer" style="display:none;" class="container">
+        <pre>
+            {
+                "proxy": "",
+                "prefixes": [
+                    "intranet.pch.etat.lu",
+                    "ws.geoportail.lu",
+                    "services3.arcgis.com",
+                    "roadsandhighwayssample.esri.com"
+                ],
+                "zoomFactor":13,
+                "lrsServer": "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/3",
+                "mapServer":{
+                    "label":"NewYork",
+                    "url":"http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer",
+                    "routeId":3,
+                    "routeFieldName":"routename",
+                    "routeIdFieldName":"customroutefield",
+                    "routeIdsDefinitionQuery":[2,3],
+                    "formatDate":"yyyy-MM-dd",
+                    "dateDefinitionQuery":"(fromdate is null or fromdate<= date '#DATE#') and (todate is null or todate>=date '#DATE#')"
+                }
+            }
+        </pre>
     </div>
 </div>

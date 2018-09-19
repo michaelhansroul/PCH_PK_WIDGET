@@ -212,11 +212,31 @@ define(
 					zoom.title = "View on map";
 					on(zoom, 'click', function() { self.onZoom(self.getRow(tr)); });
 					td.appendChild(zoom);
+
+					// special case
+					var label = document.createElement('SPAN');
+					label.className = "rowicon";
+					label.innerHTML = "&#xf02b;"; 
+					label.alt = "Add label to map";
+					label.title = "Add label to map";
+					
+					on(label, 'click', function() { 
+						if(domClass.contains(label,"enable")){
+							domClass.remove(label,'enable');
+							self.onRemoveLabel(self.getRow(tr)); 
+						}
+						else{
+							domClass.add(label,'enable');
+							self.onAddLabel(self.getRow(tr)); 
+						}	
+					});
+					td.appendChild(label);
 					
 					if( this.isEditable )
 						this._append_edit_icon(tr, td);
 					
 					tr.appendChild(td);
+					
 					this._allow_select(checkbox);
 				}
 			
@@ -289,7 +309,7 @@ define(
 					else if( this.columns[j].type == 'esriFieldTypeDate' )
 						value = new Date(parseInt(value)).toNormalString();
 					else if(this.columns[j].round)
-						value = Math.round(value*1000)/1000;
+						value = Math.floor(value);//Math.round(value*1000)/1000;
 					td.innerHTML = value;
 				}
 			}
@@ -917,6 +937,8 @@ define(
 			this.onDeselect = function(row){self.emit("onDeselect",row);}
 			this.onSelect = function(row){self.emit("onSelect",row);}
 			this.onZoom = function(row){self.emit("onZoom",row);}
+			this.onAddLabel = function(row){self.emit("onAddLabel",row);}
+			this.onRemoveLabel = function(row){self.emit("onRemoveLabel",row);}
 			this.onAdd = function(row){}
 			this.onRemove = function(row){}
 			this.onPaging = function(page){}

@@ -57,10 +57,22 @@ define([
                 var graphic = this.getGraphicByAttributes(row);
                 this.map.centerAndZoom(graphic.geometry, this.zoomFactor);
             }));
+
             this.grid.on("onSelect",lang.hitch(this,function(row){
                 var graphic = this.getGraphicByAttributes(row);
                 this.graphicsLayer.add(graphic);
             }));
+
+            this.grid.on("onAddLabel",lang.hitch(this,function(row){
+                var graphic = this.getLabelGraphicByAttributes(row);
+                this.graphicsLayer.add(graphic);
+            }));
+
+            this.grid.on("onRemoveLabel",lang.hitch(this,function(row){
+                var graphic = this.getLabelGraphicByAttributes(row);
+                this.graphicsLayer.remove(graphic);
+            }));
+
             this.grid.on("onDeselect",lang.hitch(this,function(row){
                 var graphic = this.getGraphicByAttributes(row);
                 this.graphicsLayer.remove(graphic);
@@ -68,6 +80,7 @@ define([
             this.graphicsLayer = new GraphicsLayer();
             this.overGraphics = new GraphicsLayer();
             this.graphics = [];
+            this.labelGraphics = [];
 
             on(this.widget.deleteLabelsButton,"click",lang.hitch(this,function(){
                 this.clear();
@@ -82,6 +95,13 @@ define([
             for(var i=0;i<this.graphics.length;i++){
                 if(this.graphics[i].attributes===attributes)
                     return this.graphics[i];
+            }
+            return null;
+        },
+        getLabelGraphicByAttributes:function(attributes){
+            for(var i=0;i<this.labelGraphics.length;i++){
+                if(this.labelGraphics[i].attributes===attributes)
+                    return this.labelGraphics[i];
             }
             return null;
         },
@@ -100,6 +120,36 @@ define([
                         this.grid.add(graphics[0].attributes);
                         this.graphics.push(graphics[0]);
                         this.grid.select(graphics[0].attributes);
+
+                        var graphicLabel = new Graphic(new Point(graphics[0].geometry),graphics[0].symbol,graphics[0].attributes);
+						graphicLabel.setSymbol(new TextSymbol(
+							{
+							"type": "esriTS",
+							"color": [255,255,255,255],
+							"backgroundColor": [0,0,0,255],
+							"borderLineSize": 2,
+							"borderLineColor": [0,0,0,255],
+							"haloSize": 2,
+							"haloColor": [0,0,0,255],
+							"verticalAlignment": "bottom",
+							"horizontalAlignment": "left",
+							"rightToLeft": false,
+							"angle": 0,
+							"xoffset": 0,
+							"yoffset": 0,
+							"kerning": true,
+							"font": {
+							 "family": "Arial",
+							 "size": 10,
+							 "style": "normal",
+							 "weight": "bold",
+							 "decoration": "none"
+							},
+							"text":graphics[0].attributes["routeId"]+": "+Math.floor(graphics[0].attributes["measure"])
+                            }
+					    ));
+                        this.labelGraphics.push(graphicLabel);
+                        
                         this.widget.splash.success();
                     }
                     else
@@ -193,7 +243,7 @@ define([
 							 "weight": "bold",
 							 "decoration": "none"
 							},
-							"text":graphics[0].attributes["routeId"]+": "+graphics[0].attributes["measure"]
+							"text":graphics[0].attributes["routeId"]+": "+Math.floor(graphics[0].attributes["measure"])
 					   }
 					   ));
 					   //this.overGraphics.add(graphicPoint);

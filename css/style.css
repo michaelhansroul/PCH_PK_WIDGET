@@ -539,6 +539,7 @@ table.grid th.desc:after {
 .rowicon { font-family: 'fontawesome'; font-size: 12px; display: inline-block; margin-left: 3px; margin-right: 2px; vertical-align: top; cursor: pointer; }
 .rowicon:hover { color: #0099FF; }
 .rowicon:active { color: #FF6633; }
+.rowicon.enable { color: #0099FF; }
 
 .sk-circle {
   margin: 100px auto;

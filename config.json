@@ -15,6 +15,9 @@
         "url":"http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer",
         "routeId":3,
         "routeFieldName":"routename",
-        "routeIdFieldName":"customroutefield"
+        "routeIdFieldName":"customroutefield",
+        "routeIdsDefinitionQuery":[2,3],
+        "formatDate":"yyyy-MM-dd",
+        "dateDefinitionQuery":"(fromdate is null or fromdate<= date '#DATE#') and (todate is null or todate>=date '#DATE#')"
     }
 }
