@@ -11,6 +11,7 @@
     "zoomFactor":13,
     "lrsServer": "http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/3",
     "mapServer":{
+        "addToMap":true,
         "label":"NewYork",
         "url":"http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer",
         "routeId":3,

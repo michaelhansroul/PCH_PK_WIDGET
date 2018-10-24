@@ -457,7 +457,8 @@ define([
 			if(!this.layer){
 				this.layer = new ArcGISDynamicMapServiceLayer(this.config.mapServer.url,{"opacity": 1});
 				this.layer.label = this.config.mapServer.label;
-				this.map.addLayer(this.layer);
+				if(this.config.mapServer.addToMap)
+					this.map.addLayer(this.layer);
 			}	
 
 			if(this.currentTool)
